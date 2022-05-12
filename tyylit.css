@@ -1,0 +1,24 @@
+#rastiForm {
+    display: block;
+    width: 25%; 
+  }
+  
+  #rastiForm .oikea {
+      float: right;
+      padding: 0%;
+  }
+  
+  .bl{
+      margin: 0%;
+      padding: 1%;
+  }
+  
+  #lisaaJoukkue{
+      display: grid;
+      grid-template-columns: 25%;
+  }
+  
+  label {
+      padding: 1%;
+  }
+  
