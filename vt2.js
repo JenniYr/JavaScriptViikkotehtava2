@@ -8,12 +8,14 @@
 // xmldata-muuttuja sisältää kaiken tarvittavan datan
 // vinkki: muunna xmldata ensimmäisen viikkotehtävän tyyppiseksi rakenteeksi
 
+let xmldata; // globaalimuuttuja, jotta lisäykset voidaan tehdä tähän rakenteeseen
+
 window.addEventListener("load", function() {
 	fetch('https://appro.mit.jyu.fi/cgi-bin/tiea2120/randomize.cgi')
 	  .then(response => response.text())
 	  .then(function(data) {
 		let parser = new window.DOMParser();
-	        let xmldata = parser.parseFromString( data, "text/xml" );
+	    xmldata = parser.parseFromString( data, "text/xml" );
 		// tästä eteenpäin omaa koodia
 		console.log(xmldata);	
 		let leimaustavat = kopioiLeimaustavat(xmldata.children[0].children[2].children);
@@ -35,7 +37,7 @@ window.addEventListener("load", function() {
 		luoLisaaJasenForm(leimaustavat);
 
 		document.getElementById("rastiForm").addEventListener("submit", tarkistaValidius);
-		document.getElementById("rastiForm").addEventListener("click", lisaaRasti(ob.rastit));
+		//document.getElementById("NappiLisaaRasti").addEventListener("submit", lisaaRasti(ob.rastit));
 
 		let inputit = document.getElementsByClassName("uusiJasenInput");
 		let formJasen = document.getElementById("fielsetJasenet");
@@ -50,7 +52,7 @@ window.addEventListener("load", function() {
 function luoLisaaRastiForm(){
 
 	let rastiform = document.getElementById("rastiForm");
-
+	
 	let rastifieldset = document.createElement("fieldset");
 	rastiform.appendChild(rastifieldset);
 
@@ -59,7 +61,7 @@ function luoLisaaRastiForm(){
 	rastifieldset.appendChild(legend);
 
 	luoPElementti(rastifieldset, "latitude", "Lat", "9", "lat", "Anna tähän latitude");
-	luoPElementti(rastifieldset, "longitude", "Lon", "9", "lon", "Anna tähän longitude")
+	luoPElementti(rastifieldset, "longitude", "Lon", "9", "lon", "Anna tähän longitude");
 	luoPElementti(rastifieldset, "koodi", "Koodi", "1", "koodi", "Anna tähän rastin koodi");
 	
 	let pNappi = document.createElement("p");
@@ -67,15 +69,16 @@ function luoLisaaRastiForm(){
 	inputNappi.setAttribute("id", "NappiLisaaRasti");
 	inputNappi.setAttribute("type", "submit");
 	inputNappi.setAttribute("value", "Lisaa Rasti");
+	inputNappi.addEventListener("click", lisaaRasti);
 
-	rastifieldset.appendChild(pNappi)
+	rastifieldset.appendChild(pNappi);
 	pNappi.appendChild(inputNappi);
 }
 
 function luoPElementti(fieldset, labelFor, textCon, minLen, nimi, titleText){
 	let p = document.createElement("p");
 	p.setAttribute("class", "bl");
-	let label = document.createElement("label")
+	let label = document.createElement("label");
 	label.setAttribute("class", "vasen");
 	label.setAttribute("for", labelFor);
 	label.textContent = textCon;
@@ -87,7 +90,7 @@ function luoPElementti(fieldset, labelFor, textCon, minLen, nimi, titleText){
 	input.setAttribute("type", "text");
 	input.setAttribute("name", nimi);
 	input.setAttribute("value", "");
-	input.setAttribute("title", titleText)
+	input.setAttribute("title", titleText);
 
 	fieldset.appendChild(p);
 	p.appendChild(label);
@@ -392,7 +395,10 @@ class Joukkue{
 	}
 }
 
-function lisaaRasti(rastit){
+function lisaaRasti(e){
+
+	e.preventDefault();
+
 	let lomake = document.forms["rastiForm"];
 	let inputit = lomake.getElementsByTagName("input");
 	let boo = true;
@@ -403,16 +409,27 @@ function lisaaRasti(rastit){
 
 	let lati = parseFloat(inputit[0].value);
 	let long = parseFloat(inputit[1].value);
-	let koodi = inputit[2];
+	let koodi = inputit[2].value;
 
 	if(isNaN(lati)){boo = false;}
 	if(isNaN(long)){boo = false;}
 
+	let data = xmldata.children;
+	let datanLapset = data[0].children;
+	let r = datanLapset[0];
+	let rastit = r.children;
+
 	if(boo === true){
 		let id = luoUusiId(rastit);
-		let uusiRasti = new Rasti(id, koodi.value, lati, long);
+
+		let uusiRASTI = document.createElement("rasti");
+		uusiRASTI.setAttribute("id", id);
+		uusiRASTI.setAttribute("koodi", koodi);
+		uusiRASTI.setAttribute("lat", lati);
+		uusiRASTI.setAttribute("lon", long);
 		
-		rastit.push(uusiRasti);
+		rastit.appendChild(uusiRASTI);
+		//rastit.push(uusiRasti);
 		rastit.sort(jarjestaRastit);
 		luoRastiLista(rastit);
 	}
