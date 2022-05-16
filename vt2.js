@@ -1,4 +1,5 @@
 "use strict";
+// Kokeilumuutos
 //@ts-check
 // voit tutkia käsiteltävää dataa suoraan osoitteesta
 // https://appro.mit.jyu.fi/cgi-bin/tiea2120/randomize.cgi
@@ -171,6 +172,7 @@ function luoLisaaJasenForm(leimaustavat){
 	inputNappi.setAttribute("id", "tallennaMuutoksetNappi");
 	inputNappi.setAttribute("type", "submit");
 	inputNappi.setAttribute("value", "Tallenna muutokset");
+	inputNappi.addEventListener("click", lisaaJasen);
 
 	let pLabelJasen1 = document.createElement("p");
 	let pLabelJasen2 = document.createElement("p");
@@ -212,6 +214,7 @@ function luoLisaaJasenForm(leimaustavat){
 		inputLeimaustavat.setAttribute("name", "leimaustapa");
 		inputLeimaustavat.setAttribute("id", leimaustapa);
 		inputLeimaustavat.setAttribute("value", leimaustapa);
+		inputLeimaustavat.setAttribute("class", "leimaustapa");
 		pLeimaustavat.appendChild(labelLeimaustavat);
 		pLeimaustavat.appendChild(inputLeimaustavat);
 	}
@@ -221,6 +224,30 @@ function luoLisaaJasenForm(leimaustavat){
 	pNimi.appendChild(labelNimi);
 	pNimi.appendChild(inputNimi);
 
+}
+
+function lisaaJasen(e){
+	e.preventDefault();
+	let lomake = document.forms["lisaaJoukkueForm"];
+	let inputit = lomake.getElementsByTagName("input");
+	let foo = true;
+
+	let joukkueenNimi = inputit[0].value;
+	if(joukkueenNimi.length === 0){foo = false;}
+
+	let jasenet = lomake.getElementsByClassName("uusiJasenInput");
+	if(jasenet.length === 0){foo = false;}
+	
+	let leimaustavat = lomake.getElementsByClassName("leimaustapa");
+	let valittujenLeimaustapojenMaara = 0;
+	for(let f of leimaustavat){
+		if(f.checked === true){valittujenLeimaustapojenMaara++;}
+	}
+	if(valittujenLeimaustapojenMaara <1){foo = false;}
+	
+	console.log(jasenet);
+	console.log(inputit);
+	console.log(foo);
 }
 
 function kopioSarjat(sarjatHTML){
@@ -407,6 +434,11 @@ function lisaaRasti(e){
 		if(f.type == "text" && f.id != "koodi"){boo = testaaValidius(f.value);}
 	}
 
+	for(let f of inputit){
+		if(f.id === "koodi"){if(f.value.length === 0){boo = false;}
+		}
+	}
+
 	let lati = parseFloat(inputit[0].value);
 	let long = parseFloat(inputit[1].value);
 	let koodi = inputit[2].value;
@@ -418,7 +450,10 @@ function lisaaRasti(e){
 	let datanLapset = data[0].children;
 	let r = datanLapset[0];
 	let rastit = r.children;
+	let vikarasti = r.lastChild;
 
+	lati = lati + "";
+	long = long + "";
 	if(boo === true){
 		let id = luoUusiId(rastit);
 
@@ -428,10 +463,10 @@ function lisaaRasti(e){
 		uusiRASTI.setAttribute("lat", lati);
 		uusiRASTI.setAttribute("lon", long);
 		
-		rastit.appendChild(uusiRASTI);
+		vikarasti.parentNode.appendChild(uusiRASTI);
 		//rastit.push(uusiRasti);
-		rastit.sort(jarjestaRastit);
-		luoRastiLista(rastit);
+		let uusiRastiLista = kopioiRastit(rastit);		
+		luoRastiLista(uusiRastiLista);
 	}
 
 	tyhjennaInputKentat();
