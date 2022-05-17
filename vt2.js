@@ -35,8 +35,8 @@ window.addEventListener("load", function() {
 		luoRastiLista(ob.rastit);
 		
 		luoLisaaRastiForm();
-		luoLisaaJasenForm(leimaustavat);
-
+		luoLisaaJoukkueForm(leimaustavat);
+	
 		document.getElementById("rastiForm").addEventListener("submit", tarkistaValidius);
 		//document.getElementById("NappiLisaaRasti").addEventListener("submit", lisaaRasti(ob.rastit));
 
@@ -134,18 +134,13 @@ if ( !tyhja) {
 		let label = inputit[i].parentNode.children[0];
 		label.firstChild.nodeValue = "Jäsen " + (i+1); 
 	}
-
-	
-
-	
-	console.log("PÖÖ");
 }
 
 
-function luoLisaaJasenForm(leimaustavat){
+function luoLisaaJoukkueForm(leimaustavat){
 	let form = document.getElementById("lisaaJoukkueForm");
-	form.addEventListener("keyup", lisaaJasen);
-	form.addEventListener("input", lisaaJasen);
+	form.addEventListener("keyup", tarkistaJoukkueenTiedot);
+	form.addEventListener("input", tarkistaJoukkueenTiedot);
 	let fieldset = document.createElement("fieldset");
 	let legend = document.createElement("legend");
 	legend.textContent = "Uusi joukkue";
@@ -175,6 +170,7 @@ function luoLisaaJasenForm(leimaustavat){
 	inputNappi.setAttribute("type", "submit");
 	inputNappi.setAttribute("value", "Tallenna muutokset");
 	inputNappi.setAttribute("disabled", "true");
+	inputNappi.addEventListener("click", lisaaJoukkue);
 
 	let pLabelJasen1 = document.createElement("p");
 	let pLabelJasen2 = document.createElement("p");
@@ -228,7 +224,60 @@ function luoLisaaJasenForm(leimaustavat){
 
 }
 
-function lisaaJasen(e){
+function etsiPisinSarja(){
+	let data = xmldata.firstChild;
+	let sarjat = data.children[1];
+	let id = "0";
+	let kesto = 0;
+
+	for(let s of sarjat.children){
+		let parsittuKesto = parseInt(s.attributes.kesto.value);
+		if(parsittuKesto > kesto){
+			id = s.id;
+			kesto = parsittuKesto;
+		} 
+	}
+
+	return id;
+}
+
+function lisaaJoukkue(e){
+	e.preventDefault();
+
+	let lomake = document.forms["lisaaJoukkueForm"];
+	let inputit = lomake.getElementsByTagName("input");	
+	let joukkueenNimi = inputit[0].value;
+	let jaSenet = lomake.getElementsByClassName("uusiJasenInput");
+	let leimaustavat = lomake.getElementsByClassName("leimaustapa");
+	let sarja = etsiPisinSarja(); //tähän palautetaan sarjan id
+
+	let joukkue = document.createElement("joukkue");
+
+	joukkue.setAttribute("aika", "00:00:00");
+	joukkue.setAttribute("matka", "0");
+	joukkue.setAttribute("nimi", joukkueenNimi);
+	joukkue.setAttribute("pisteet", "0");
+	joukkue.setAttribute("sarja", sarja);
+
+	let jasenet = document.createElement("jasenet");
+	for(let j of jaSenet){
+		if(j.value != ""){
+			let jasen = document.createElement("jasen");
+			jasen.textContent = j.value;
+			jasenet.appendChild(jasen);
+		}
+	}
+	joukkue.appendChild(jasenet);
+
+	let rastileimaukset = document.createElement("rastileimaukset");
+	joukkue.appendChild(rastileimaukset);
+
+	console.log(joukkue);
+	console.log("LISÄÄ JOUKKUE");
+
+}
+
+function tarkistaJoukkueenTiedot(e){
 	e.preventDefault();
 	let lomake = document.forms["lisaaJoukkueForm"];
 	let inputit = lomake.getElementsByTagName("input");
@@ -255,10 +304,11 @@ function lisaaJasen(e){
 	if(foo === false){
 		lisaysNappi.setAttribute("disabled", "true");
 	}
-	
+/*	
 	console.log(jasenet);
 	console.log(inputit);
 	console.log(foo);
+*/
 }
 
 function kopioSarjat(sarjatHTML){
