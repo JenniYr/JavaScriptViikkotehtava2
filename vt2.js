@@ -144,6 +144,8 @@ if ( !tyhja) {
 
 function luoLisaaJasenForm(leimaustavat){
 	let form = document.getElementById("lisaaJoukkueForm");
+	form.addEventListener("keyup", lisaaJasen);
+	form.addEventListener("input", lisaaJasen);
 	let fieldset = document.createElement("fieldset");
 	let legend = document.createElement("legend");
 	legend.textContent = "Uusi joukkue";
@@ -172,7 +174,7 @@ function luoLisaaJasenForm(leimaustavat){
 	inputNappi.setAttribute("id", "tallennaMuutoksetNappi");
 	inputNappi.setAttribute("type", "submit");
 	inputNappi.setAttribute("value", "Tallenna muutokset");
-	inputNappi.addEventListener("click", lisaaJasen);
+	inputNappi.setAttribute("disabled", "true");
 
 	let pLabelJasen1 = document.createElement("p");
 	let pLabelJasen2 = document.createElement("p");
@@ -236,7 +238,7 @@ function lisaaJasen(e){
 	if(joukkueenNimi.length === 0){foo = false;}
 
 	let jasenet = lomake.getElementsByClassName("uusiJasenInput");
-	if(jasenet.length === 0){foo = false;}
+	if(jasenet.length < 2){foo = false;}
 	
 	let leimaustavat = lomake.getElementsByClassName("leimaustapa");
 	let valittujenLeimaustapojenMaara = 0;
@@ -244,6 +246,15 @@ function lisaaJasen(e){
 		if(f.checked === true){valittujenLeimaustapojenMaara++;}
 	}
 	if(valittujenLeimaustapojenMaara <1){foo = false;}
+	
+	let lisaysNappi = document.getElementById("tallennaMuutoksetNappi");
+	if(foo === true){
+		lisaysNappi.removeAttribute("disabled");
+	}
+
+	if(foo === false){
+		lisaysNappi.setAttribute("disabled", "true");
+	}
 	
 	console.log(jasenet);
 	console.log(inputit);
