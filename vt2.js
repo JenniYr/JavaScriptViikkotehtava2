@@ -10,6 +10,8 @@
 // vinkki: muunna xmldata ensimmäisen viikkotehtävän tyyppiseksi rakenteeksi
 
 let xmldata; // globaalimuuttuja, jotta lisäykset voidaan tehdä tähän rakenteeseen
+let joukkueenId;
+let ob;
 
 window.addEventListener("load", function() {
 	fetch('https://appro.mit.jyu.fi/cgi-bin/tiea2120/randomize.cgi')
@@ -18,13 +20,14 @@ window.addEventListener("load", function() {
 		let parser = new window.DOMParser();
 	    xmldata = parser.parseFromString( data, "text/xml" );
 		// tästä eteenpäin omaa koodia
-		console.log(xmldata);	
+		console.log(xmldata);
+		joukkueenId = getRandomId(1,1001);
 		let leimaustavat = kopioiLeimaustavat(xmldata.children[0].children[2].children);
 		let rastit = kopioiRastit(xmldata.documentElement.getElementsByTagName("rasti"));
 		let sarjat = kopioSarjat(xmldata.documentElement.getElementsByTagName("sarja"));
 		let joukkueet = kopioiJoukkueet(xmldata.documentElement.getElementsByTagName("joukkue"), rastit);
-
-		let ob = new objekti(joukkueet, rastit, leimaustavat, sarjat);
+		
+		ob = new objekti(joukkueet, rastit, leimaustavat, sarjat);
 
 		console.log(ob.joukkueet);
 		console.log(ob.leimaustavat);
@@ -49,6 +52,12 @@ window.addEventListener("load", function() {
 	  }	
 	);
 });
+
+function getRandomId(min, max){
+	min = Math.ceil(min);
+  	max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min) + min);
+}
 
 function luoLisaaRastiForm(){
 
@@ -250,29 +259,37 @@ function lisaaJoukkue(e){
 	let jaSenet = lomake.getElementsByClassName("uusiJasenInput");
 	let leimaustavat = lomake.getElementsByClassName("leimaustapa");
 	let sarja = etsiPisinSarja(); //tähän palautetaan sarjan id
+	let id = teeJoukkueelleId();
 
-	let joukkue = document.createElement("joukkue");
-
-	joukkue.setAttribute("aika", "00:00:00");
-	joukkue.setAttribute("matka", "0");
-	joukkue.setAttribute("nimi", joukkueenNimi);
-	joukkue.setAttribute("pisteet", "0");
-	joukkue.setAttribute("sarja", sarja);
-
-	let jasenet = document.createElement("jasenet");
+	let jasenet = [];
 	for(let j of jaSenet){
 		if(j.value != ""){
-			let jasen = document.createElement("jasen");
-			jasen.textContent = j.value;
-			jasenet.appendChild(jasen);
+			let jasen = j.value;
+			jasenet.push(jasen);
 		}
 	}
-	joukkue.appendChild(jasenet);
 
-	let rastileimaukset = document.createElement("rastileimaukset");
-	joukkue.appendChild(rastileimaukset);
+	let rastileimaukset = [];
 
-	console.log(joukkue);
+	let leimaustavatTaulukko = [];
+	for(let l = 0; l<leimaustavat.length; l++){
+		let leimaus = leimaustavat[l];
+		if(leimaus.checked === true){
+			let leimaustapa = l + "";
+			leimaustavatTaulukko.push(leimaustapa);
+		}
+	}
+
+	let uusiJoukkue = new Joukkue(joukkueenNimi, "00:00:00", "0", "0", sarja, id, jasenet, rastileimaukset, leimaustavatTaulukko);
+	
+	let joukkueTaulukko = ob.joukkueet;
+	joukkueTaulukko.push(uusiJoukkue);
+
+	///// Tässä vaiheessa on luotu uusi joukkue-objekti ja lisätty se ob.joukkueet taulukkoon ///
+
+	teeTuloksetTaulukko(ob.joukkueet, ob.sarjat);
+
+
 	console.log("LISÄÄ JOUKKUE");
 
 }
@@ -401,6 +418,7 @@ function kopioiJoukkue(joukkueHTML, rastit){
 	let matka = joukkueHTML.attributes.matka.textContent;
 	let pisteet = joukkueHTML.attributes.pisteet.textContent;
 	let sarja = joukkueHTML.attributes.sarja.textContent;
+	let id = teeJoukkueelleId();
 
 	let jasenet = kopioJasenet(joukkueHTML.children[0]);
 	
@@ -408,8 +426,14 @@ function kopioiJoukkue(joukkueHTML, rastit){
 	
 	let leimaustapa = kopioLeimaustapa(joukkueHTML.children[2]);
 
-	let joukkue = new Joukkue(nimi, aika, matka, pisteet, sarja, jasenet, rastileimaukset, leimaustapa);
+	let joukkue = new Joukkue(nimi, aika, matka, pisteet, sarja, id, jasenet, rastileimaukset, leimaustapa);
 	return joukkue;
+}
+
+function teeJoukkueelleId(){
+	let id = joukkueenId + 1;
+	joukkueenId = id;
+	return id;
 }
 
 function kopioLeimaustapa(leimaustapaHTML){
@@ -471,12 +495,13 @@ function kopioJasenet(jasenetHTML){
 }
 
 class Joukkue{
-	constructor(nimi, aika, matka, pisteet, sarja, jasenet, rastileimaukset, leimaustapa){
+	constructor(nimi, aika, matka, pisteet, sarja, id, jasenet, rastileimaukset, leimaustapa){
 		this.nimi = nimi;
 		this.aika = aika;
 		this.matka = matka;
 		this.pisteet = pisteet;
 		this.sarja = sarja;
+		this.id = id;
 		this.jasenet = jasenet;
 		this.rastileimaukset = rastileimaukset;
 		this.leimaustapa = leimaustapa;
@@ -690,8 +715,6 @@ function teeTuloksetTaulukko(joukkueet, sarjat){
 		valiaikainenTaulukko.push(ob);
 	}
 
-	valiaikainenTaulukko.sort(jarjestaJoukkueet);
-	valiaikainenTaulukko.sort(jarjestaJoukkueetPisteidenMukaan);
 	laitaTaulukkoEsille(valiaikainenTaulukko);
 }
 
@@ -814,7 +837,14 @@ function tahanJasenet(joukkue){
 
 function laitaTaulukkoEsille(valiaikainenTaulukko){
 
+	valiaikainenTaulukko.sort(jarjestaJoukkueet);
+	valiaikainenTaulukko.sort(jarjestaJoukkueetPisteidenMukaan);
+
 	let taulukko = document.getElementById("tulokset");
+
+	while (taulukko.lastChild) {
+        taulukko.removeChild(taulukko.lastChild);
+    }
 
 	for(let alkio of valiaikainenTaulukko){
 	
