@@ -159,6 +159,7 @@ function luoLisaaJoukkueForm(leimaustavat){
 	let labelNimi = document.createElement("label");
 	labelNimi.textContent = "Anna joukkueen nimi";
 	let inputNimi = document.createElement("input");
+	inputNimi.setAttribute("class", "inputJoukkueenNimi");
 
 	let fieldetJasenet = document.createElement("fieldset");
 	fieldetJasenet.setAttribute("id", "fieldsetJasenet");
@@ -289,9 +290,27 @@ function lisaaJoukkue(e){
 
 	teeTuloksetTaulukko(ob.joukkueet, ob.sarjat);
 
+	tyhjennaInputKentatUusiJoukkueFormista();
+
 
 	console.log("LISÄÄ JOUKKUE");
 
+}
+
+function tyhjennaInputKentatUusiJoukkueFormista(){
+
+	let input = document.getElementsByClassName("inputJoukkueenNimi");
+	input[0].value = "";
+
+	let inputit = document.getElementsByClassName("uusiJasenInput");
+	for(let i = 0; i<inputit.length; i++){
+		inputit[i].value = "";
+	}
+
+	let cbs = document.getElementsByClassName("leimaustapa");
+	for(let i = 0; i<cbs.length; i++){
+		cbs[i].checked = false;
+	}
 }
 
 function tarkistaJoukkueenTiedot(e){
