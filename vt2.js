@@ -128,6 +128,7 @@ function addNew(e){
 
 if ( !tyhja) {
 	let p = document.createElement("p");
+	p.setAttribute("class", "pJasenet");
 	let label = document.createElement("label");
 	label.textContent = "Jäsen";
 	let input = document.createElement("input");
@@ -163,6 +164,7 @@ function luoLisaaJoukkueForm(leimaustavat){
 
 	let fieldetJasenet = document.createElement("fieldset");
 	fieldetJasenet.setAttribute("id", "fieldsetJasenet");
+	fieldetJasenet.setAttribute("class", "fieldsetJasenet");
 	let legendJasenet = document.createElement("legend");
 	legendJasenet.textContent = "Anna jäsenien nimet";
 
@@ -184,6 +186,9 @@ function luoLisaaJoukkueForm(leimaustavat){
 
 	let pLabelJasen1 = document.createElement("p");
 	let pLabelJasen2 = document.createElement("p");
+
+	pLabelJasen1.setAttribute("class", "pJasenet");
+	pLabelJasen2.setAttribute("class", "pJasenet");
 
 	form.appendChild(fieldset);
 	fieldset.appendChild(legend);
@@ -700,11 +705,12 @@ class objekti {
 }
 
 class obj {
-	constructor(sarja, nimi, jasenet, pisteet){
+	constructor(sarja, nimi, jasenet, pisteet, id){
 		this.sarja = sarja;
 		this.nimi = nimi;
 		this.jasenet = jasenet;
 		this.pisteet = pisteet;
+		this.id = id;
 	}
 }
 
@@ -728,8 +734,9 @@ function teeTuloksetTaulukko(joukkueet, sarjat){
 		let nimi = joukkue.nimi;
 		let jasenet = tahanJasenet(joukkue);
 		let pisteet = laskePisteet(joukkue);
+		let id = joukkue.id;
 
-		let ob = new obj(sarja, nimi, jasenet, pisteet);
+		let ob = new obj(sarja, nimi, jasenet, pisteet, id);
 
 		valiaikainenTaulukko.push(ob);
 	}
@@ -875,23 +882,88 @@ function laitaTaulukkoEsille(valiaikainenTaulukko){
 	let ul = document.createElement("ul");
 	let li1 = document.createElement("li");
 	let li2 = document.createElement("li");
+	let a = document.createElement("a");
 
 	td1.textContent = alkio.sarja;
 	//td2.textContent = alkio.nimi;
 	
 	td4.textContent = alkio.pisteet + "p";
-	li1.textContent = alkio.nimi;
+	//li1.textContent = alkio.nimi;
 	li2.textContent = alkio.jasenet;
+	a.textContent = alkio.nimi;
+	a.addEventListener("click", muokkaaJoukkueenTietoja2);
+	a.setAttribute("href", "#lisaaJoukkueForm");
+	a.id = alkio.id;
+
 
 	taulukko.appendChild(tr);
 	tr.appendChild(td1); // Joukkueen sarja
 	tr.appendChild(td2); // Tyhjä td johon tulee lista joukkueen nimestä ja jäsenistä
 	td2.appendChild(ul); 
-	ul.appendChild(li1); // Joukkueen nimi
+	ul.appendChild(li1); // Li-elementti jonka sisälle tuleee A-elementti johon tulee Joukkueen nimi
+	li1.appendChild(a);
 	ul.appendChild(li2); // Joukkueen jasenet
 	tr.appendChild(td4); // Joukkueen pisteet
 	}
 }
+
+function muokkaaJoukkueenTietoja2(e){
+	e.preventDefault();
+	let src = e.srcElement;
+	let srcTC = src.textContent;
+	let srcId = src.id;
+
+	let form = document.forms[1];
+	let joukkue = etsiOikeaJoukkue(srcId);
+
+	let joukkueenNimi = form.getElementsByClassName("inputJoukkueenNimi");
+	joukkueenNimi[0].value = joukkue.nimi;
+
+
+	let joukkueenJasenet = joukkue.jasenet;
+	let pJasenet = form.getElementsByClassName("pJasenet");
+
+	for(let i=1; i>-1; i--){
+		pJasenet[i].remove();
+	}
+	let fieldset = form.getElementsByClassName("fieldsetJasenet");
+
+	for(let i = 0; i<joukkueenJasenet.length; i++){
+		let numero = i+1;
+		let p = document.createElement("p");
+		p.setAttribute("class", "pjasenet");
+
+		let label = document.createElement("label");
+		let input = document.createElement("input");
+		label.textContent = "Jäsen " + numero;
+
+		fieldset[0].appendChild(p);
+		p.appendChild(label);
+		p.appendChild(input);
+
+		input.value = joukkueenJasenet[i];
+	}
+
+
+	console.log(form);
+
+	console.log(srcTC);
+	console.log(srcId);
+}
+
+function etsiOikeaJoukkue(id){
+
+	let joukkueet = ob.joukkueet;
+	let oikeaJoukkue;
+
+	for(let j of joukkueet){
+		let joukkueenId = j.id;
+		if(joukkueenId == id){oikeaJoukkue = j;}
+	}
+
+	return oikeaJoukkue;
+}
+
 
 function jarjestaJoukkueet(a,b){
 	let sarjanNimiA = parseInt(a.sarja);
