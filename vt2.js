@@ -275,10 +275,18 @@ function tallennaMuutokset(e){
 	joukkue.jasenet = uusijasenet;
 
 	let leimaustavat = lomake.getElementsByClassName("leimaustapa");
-	joukkue.leimastapa = leimaustavat;
+	let uusileimaustavat = [];
 
+	for(let j=0; j<leimaustavat.length; j++){
+		if(leimaustavat[j].checked == true){
+			uusileimaustavat.push(j + "");
+		}
+	}
 
+	joukkue.leimaustapa = uusileimaustavat;
 
+	teeTuloksetTaulukko(ob.joukkueet, ob.sarjat);
+	tyhjennaInputKentatUusiJoukkueFormista();
 
 	console.log("voihan perkeleen peräreikä");
 }
@@ -354,6 +362,11 @@ function tyhjennaInputKentatUusiJoukkueFormista(){
 	let inputit = document.getElementsByClassName("uusiJasenInput");
 	for(let i = 0; i<inputit.length; i++){
 		inputit[i].value = "";
+	}
+
+	let pJasenet = document.getElementsByClassName("pJasenet");
+	for(let i = pJasenet.length-1; i>1; i--){
+		pJasenet[i].parentNode.removeChild(pJasenet[i]);
 	}
 
 	let cbs = document.getElementsByClassName("leimaustapa");
@@ -940,12 +953,43 @@ function laitaTaulukkoEsille(valiaikainenTaulukko){
         taulukko.removeChild(taulukko.lastChild);
     }
 
+	//Alla oleva osa olisi järkevämpää laittaa funktion sisälle
+	let caption = document.createElement("caption");
+	caption.textContent = "Tulokset";
+	taulukko.appendChild(caption);
+
+	let tr = document.createElement("tr");
+	taulukko.appendChild(tr);
+
+	let th1 = document.createElement("th");
+	let a1 = document.createElement("a");
+	a1.textContent = "Sarja";
+	a1.addEventListener("click", jarjestaSarjanMukaan);
+	a1.setAttribute("href", "");
+
+	let th2 = document.createElement("th");
+	let a2 = document.createElement("a");
+	a2.textContent = "Joukkue";
+	a1.addEventListener("click", jarjestaJoukkueenMukaan);
+	
+	let th3 = document.createElement("th");
+	let a3 = document.createElement("a");
+	a3.textContent = "Pisteet";
+	a1.addEventListener("click", jarjestaPisteidenMukaan);
+
+	tr.appendChild(th1);
+	th1.appendChild(a1);
+	tr.appendChild(th2);
+	th2.appendChild(a2);
+	tr.appendChild(th3);
+	th3.appendChild(a3);
+
+
 	for(let alkio of valiaikainenTaulukko){
 	
 	let tr = document.createElement("tr");
 	let td1 = document.createElement("td");
 	let td2 = document.createElement("td");
-	//let td3 = document.createElement("td");
 	let td4 = document.createElement("td");
 	let ul = document.createElement("ul");
 	let li1 = document.createElement("li");
@@ -953,10 +997,7 @@ function laitaTaulukkoEsille(valiaikainenTaulukko){
 	let a = document.createElement("a");
 
 	td1.textContent = alkio.sarja;
-	//td2.textContent = alkio.nimi;
-	
 	td4.textContent = alkio.pisteet + "p";
-	//li1.textContent = alkio.nimi;
 	li2.textContent = alkio.jasenet;
 	a.textContent = alkio.nimi;
 	a.addEventListener("click", muokkaaJoukkueenTietoja2);
@@ -990,8 +1031,6 @@ function muokkaaJoukkueenTietoja2(e){
 	nappi2[0].removeAttribute("disabled");
 
 	let joukkue = etsiOikeaJoukkue(joukkueenId);
-	//let nappi  = form.getElementsByClassName("lisaaJoukkueNappi");
-	//nappi[0].removeAttribute("disabled");
 
 	let joukkueenNimi = form.getElementsByClassName("inputJoukkueenNimi");
 	joukkueenNimi[0].value = joukkue.nimi;
@@ -1013,6 +1052,7 @@ function muokkaaJoukkueenTietoja2(e){
 		let label = document.createElement("label");
 		let input = document.createElement("input");
 		input.setAttribute("class", "uusiJasenInput");
+		input.addEventListener("input", addNew);
 		label.textContent = "Jäsen " + numero;
 		fieldset[0].appendChild(p);
 		p.appendChild(label);
@@ -1025,6 +1065,8 @@ function muokkaaJoukkueenTietoja2(e){
 	p.setAttribute("class", "pJasenet");
 	let label = document.createElement("label");
 	let input = document.createElement("input");
+	input.setAttribute("class", "uusiJasenInput");
+	input.addEventListener("input", addNew);
 	label.textContent = "Jäsen " + numero;
 	fieldset[0].appendChild(p);
 	p.appendChild(label);
@@ -1036,7 +1078,7 @@ function muokkaaJoukkueenTietoja2(e){
 		leimaustapa.removeAttribute("checked");
 		for(let j = 0; j<leimaustavat.length; j++){
 			if(i == leimaustavat[j]){
-				leimaustapa.setAttribute("checked", "true");
+				leimaustapa.checked = true;
 			}
 		}		
 	}
