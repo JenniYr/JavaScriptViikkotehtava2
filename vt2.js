@@ -12,6 +12,7 @@
 let xmldata; // globaalimuuttuja, jotta lisäykset voidaan tehdä tähän rakenteeseen
 let joukkueenId;
 let ob;
+let valittuJarjestys = "alku";
 
 window.addEventListener("load", function() {
 	fetch('https://appro.mit.jyu.fi/cgi-bin/tiea2120/randomize.cgi')
@@ -786,12 +787,14 @@ class objekti {
 }
 
 class obj {
-	constructor(sarja, nimi, jasenet, pisteet, id){
+	constructor(sarja, nimi, jasenet, pisteet, id, leimaustapa, rastileimaukset){
 		this.sarja = sarja;
 		this.nimi = nimi;
 		this.jasenet = jasenet;
 		this.pisteet = pisteet;
 		this.id = id;
+		this.leimaustapa = leimaustapa;
+		this.rastileimaukset = rastileimaukset;
 	}
 }
 
@@ -808,20 +811,22 @@ function teeTuloksetTaulukko(joukkueet, sarjat){
 
 	for(let joukkue of joukkueet){
 
-		let joukkueenSarja = joukkue.sarja; // numerosarja
-		let joukkueenSarjanNimi = etsiSarjanNimi(joukkueenSarja, sarjat);
-
-		let sarja = joukkueenSarjanNimi;
+		let sarja = joukkue.sarja;
 		let nimi = joukkue.nimi;
-		let jasenet = tahanJasenet(joukkue);
+		//let jasenet = tahanJasenet(joukkue);
+		let jasenet = joukkue.jasenet;
 		let pisteet = laskePisteet(joukkue);
 		let id = joukkue.id;
+		let leimaustapa = joukkue.leimaustapa;
+		let rastileimaukset = joukkue.rastileimaukset;
 
-		let ob = new obj(sarja, nimi, jasenet, pisteet, id);
+		let obe = new obj(sarja, nimi, jasenet, pisteet, id, leimaustapa, rastileimaukset);
 
-		valiaikainenTaulukko.push(ob);
+		valiaikainenTaulukko.push(obe);
 	}
-
+	ob.joukkueet = valiaikainenTaulukko;
+	valiaikainenTaulukko.sort(jarjestaJoukkueet);
+	valiaikainenTaulukko.sort(jarjestaJoukkueetPisteidenMukaan);
 	laitaTaulukkoEsille(valiaikainenTaulukko);
 }
 
@@ -941,17 +946,37 @@ function tahanJasenet(joukkue){
 	return palautus;
 }
 
+function jarjesta2(joukkue){
+
+	if(valittuJarjestys == "Sarja"){
+		joukkue.sort(jarjestaJoukkueet);
+	}
+
+	if(valittuJarjestys == "Joukkue"){
+		joukkue.sort(nimenMukaan);
+	}
+
+	if(valittuJarjestys == "Pisteet"){
+		joukkue.sort(pisteidenMukaan);}
+
+	if(valittuJarjestys == "alku"){
+		joukkue.sort(jarjestaJoukkueet)
+		joukkue.sort(jarjestaJoukkueetPisteidenMukaan);
+	}
+
+	return joukkue;
+}
+
 
 function laitaTaulukkoEsille(valiaikainenTaulukko){
-
-	valiaikainenTaulukko.sort(jarjestaJoukkueet);
-	valiaikainenTaulukko.sort(jarjestaJoukkueetPisteidenMukaan);
 
 	let taulukko = document.getElementById("tulokset");
 
 	while (taulukko.lastChild) {
         taulukko.removeChild(taulukko.lastChild);
     }
+
+	valiaikainenTaulukko = jarjesta2(valiaikainenTaulukko);
 
 	//Alla oleva osa olisi järkevämpää laittaa funktion sisälle
 	let caption = document.createElement("caption");
@@ -964,18 +989,22 @@ function laitaTaulukkoEsille(valiaikainenTaulukko){
 	let th1 = document.createElement("th");
 	let a1 = document.createElement("a");
 	a1.textContent = "Sarja";
-	a1.addEventListener("click", jarjestaSarjanMukaan);
+	a1.addEventListener("click", jarjesta);
 	a1.setAttribute("href", "");
 
 	let th2 = document.createElement("th");
 	let a2 = document.createElement("a");
 	a2.textContent = "Joukkue";
-	a1.addEventListener("click", jarjestaJoukkueenMukaan);
+	a2.addEventListener("click", jarjesta);
+	a2.setAttribute("href", "");
+
 	
 	let th3 = document.createElement("th");
 	let a3 = document.createElement("a");
 	a3.textContent = "Pisteet";
-	a1.addEventListener("click", jarjestaPisteidenMukaan);
+	a3.addEventListener("click", jarjesta);
+	a3.setAttribute("href", "");
+
 
 	tr.appendChild(th1);
 	th1.appendChild(a1);
@@ -996,7 +1025,8 @@ function laitaTaulukkoEsille(valiaikainenTaulukko){
 	let li2 = document.createElement("li");
 	let a = document.createElement("a");
 
-	td1.textContent = alkio.sarja;
+	let sarja = etsiSarjanNimi(alkio.sarja, ob.sarjat);
+	td1.textContent = sarja;
 	td4.textContent = alkio.pisteet + "p";
 	li2.textContent = alkio.jasenet;
 	a.textContent = alkio.nimi;
@@ -1016,10 +1046,53 @@ function laitaTaulukkoEsille(valiaikainenTaulukko){
 	}
 }
 
+function jarjesta(e){
+	e.preventDefault();
+	let src = e.srcElement;
+	valittuJarjestys = src.textContent;
+
+	if(valittuJarjestys == "Sarja"){
+		ob.joukkueet.sort(jarjestaJoukkueet);
+	}
+
+	if(valittuJarjestys == "Joukkue"){
+		ob.joukkueet.sort(nimenMukaan);
+	}
+
+	if(valittuJarjestys == "Pisteet"){
+		ob.joukkueet.sort(pisteidenMukaan);}
+
+	laitaTaulukkoEsille(ob.joukkueet);
+}
+
+
+function nimenMukaan(a,b){
+
+	if (a.nimi < b.nimi) {
+		return -1;
+	  }
+	  if (a.nimi > b.nimi) {
+		return 1;
+	  }
+	  return 0;
+}
+
+
+function pisteidenMukaan(a,b){
+
+	if (a.pisteet < b.pisteet) {
+		return 1;
+	  }
+	  if (a.pisteet > b.pisteet) {
+		return -1;
+	  }
+	  return 0;
+
+}
+
 function muokkaaJoukkueenTietoja2(e){
 	e.preventDefault();
 	let src = e.srcElement;
-	let srcTC = src.textContent;
 	joukkueenId = src.id;
 
 	let form = document.forms[1];
@@ -1099,8 +1172,11 @@ function etsiOikeaJoukkue(id){
 
 
 function jarjestaJoukkueet(a,b){
-	let sarjanNimiA = parseInt(a.sarja);
-	let sarjanNimiB = parseInt(b.sarja);
+
+	let sarjanNimia = etsiSarjanNimi(a.sarja, ob.sarjat);
+	let sarjanNimib = etsiSarjanNimi(b.sarja, ob.sarjat); 
+	let sarjanNimiA = parseInt(sarjanNimia);
+	let sarjanNimiB = parseInt(sarjanNimib);
 	let joukkueenNimiA = a.nimi;
 	let joukkueenNimiB = b.nimi;
 
